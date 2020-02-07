@@ -3,40 +3,70 @@ package com.example.util;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.zaxxer.hikari.HikariDataSource;
 
+@Component
 public class DataSourceHelper {
+	
+	static String prefix;
 
-	static final String prefix = "netclient6";
-
+    @Value("${spring.datasource.database.name.prefix}")
+    public void setPrefix(String prefixProperties) {
+    	prefix = prefixProperties;
+    }
+	
+    static String urlFormat;
+    
+    @Value("${spring.datasource.url}")
+    public void setUrlFormat(String urlProperties) {
+    	urlFormat = urlProperties;
+    }	
+    
+    static String userName;
+    
+    @Value("${spring.datasource.username}")
+    public void setUserName(String userNameProperties) {
+    	userName = userNameProperties;
+    }	
+    
+    static String passWord;
+    
+    @Value("${spring.datasource.password}")
+    public void setPassWord(String passWordProperties) {
+    	passWord = passWordProperties;
+    }	
+	
 	public static DataSource createAndConfigureDataSource(String tenantId) {
 
-		String cpName;
 		String dbName;
 		if (StringUtils.isBlank(tenantId)) {
 			dbName = prefix;
-			cpName = "none-tenanat-id";
 		} else {
 			dbName = prefix + "_" + tenantId;
-			cpName = tenantId;
 		}
 
-		String url = String.format("jdbc:mariadb://localhost:40001/%s?useUnicode=true&amp;characterEncoding=UTF-8", dbName);
+		String url = String.format(urlFormat, dbName);
 
 		HikariDataSource ds = new HikariDataSource();
-		ds.setUsername("root");
-		ds.setPassword("root");
+		ds.setUsername(userName);
+		ds.setPassword(passWord);
 		ds.setJdbcUrl(url);
 		ds.setDriverClassName("org.mariadb.jdbc.Driver");
 
-		ds.setConnectionTimeout(20000);
+		ds.setConnectionTimeout(30000);
 		ds.setMinimumIdle(10);
 		ds.setMaximumPoolSize(20);
 		ds.setIdleTimeout(300000);
-		ds.setConnectionTimeout(20000);
+		ds.setConnectionTimeout(30000);
+		ds.setLeakDetectionThreshold(5000);
+		ds.setAutoCommit(true);
+		ds.setMaxLifetime(1800000);
+		ds.setConnectionTestQuery("select 1");
 
-		String tenantConnectionPoolName = cpName + "-connection-pool";
+		String tenantConnectionPoolName = dbName + "-connection-pool";
 		ds.setPoolName(tenantConnectionPoolName);
 		return ds;
 	}

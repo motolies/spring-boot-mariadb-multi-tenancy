@@ -43,6 +43,12 @@ import com.example.util.DataSourceHelper;
 @EnableJpaRepositories(basePackages = { "com.example.repository" }, transactionManagerRef = "transactionManager")
 public class MultiTenantJpaConfiguration {
 
+	// @Value 사용을 위한 더미
+	@Autowired
+	private DataSourceHelper dataSourceHelper;
+	
+	
+	
 	@Autowired
 	private DataSourceProperties properties;
 
