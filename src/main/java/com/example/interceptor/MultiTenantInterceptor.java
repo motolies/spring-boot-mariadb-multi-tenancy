@@ -15,7 +15,7 @@ public class MultiTenantInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		String tenantId = request.getHeader(TENANT_HEADER_NAME);
-		TenantContext.setCurrentTenant(tenantId == null ? "DEFAULT" : tenantId);
+		TenantContext.setCurrentTenant(tenantId == null ? "" : tenantId);
 		return true;
 	}
 

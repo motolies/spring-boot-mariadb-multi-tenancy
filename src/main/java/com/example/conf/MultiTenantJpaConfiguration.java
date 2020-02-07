@@ -35,10 +35,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.example.entity.Order;
+import com.example.util.DataSourceHelper;
 
 @Configuration
 @EnableConfigurationProperties({ JpaProperties.class })
-//@ImportResource(locations = { "classpath:applicationContent.xml" })
 @EnableTransactionManagement(proxyTargetClass = true)
 @EnableJpaRepositories(basePackages = { "com.example.repository" }, transactionManagerRef = "transactionManager")
 public class MultiTenantJpaConfiguration {
@@ -59,35 +59,12 @@ public class MultiTenantJpaConfiguration {
 		return new CurrentTenantIdentifierResolverImpl();
 	}
 
-	@Bean(name = "mars2DataSources")
-	public Map<String, DataSource> mars2DataSources() {
+	@Bean(name = "NxcDataSources")
+	public Map<String, DataSource> NxcDataSources() {
+		final String defaultTenantId = "";
 
-		File[] files = Paths.get("tenants").toFile().listFiles();
 		Map<String, DataSource> datasources = new HashMap<>();
-
-		for (File propertyFile : files) {
-			Properties tenantProperties = new Properties();
-//			DataSourceBuilder dataSourceBuilder = new DataSourceBuilder(this.getClass().getClassLoader());
-			DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create(this.getClass().getClassLoader());
-
-			try {
-				tenantProperties.load(new FileInputStream(propertyFile));
-
-				String tenantId = tenantProperties.getProperty("name");
-
-				dataSourceBuilder.driverClassName(properties.getDriverClassName()).url(tenantProperties.getProperty("datasource.url")).username(tenantProperties.getProperty("datasource.username"))
-						.password(tenantProperties.getProperty("datasource.password"));
-
-				if (properties.getType() != null) {
-					dataSourceBuilder.type(properties.getType());
-				}
-
-				datasources.put(tenantId, dataSourceBuilder.build());
-			} catch (IOException e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
+		datasources.put(defaultTenantId, DataSourceHelper.createAndConfigureDataSource(defaultTenantId));
 
 		return datasources;
 	}
@@ -123,14 +100,6 @@ public class MultiTenantJpaConfiguration {
 		JpaTransactionManager jpa = new JpaTransactionManager();
 		jpa.setEntityManagerFactory(entityManagerFactory);
 		return jpa;
-	}
-
-	private DataSource initialize(DataSource dataSource) {
-		ClassPathResource schemaResource = new ClassPathResource("schema.sql");
-		ClassPathResource dataResource = new ClassPathResource("data.sql");
-		ResourceDatabasePopulator populator = new ResourceDatabasePopulator(schemaResource, dataResource);
-		populator.execute(dataSource);
-		return dataSource;
 	}
 
 }
